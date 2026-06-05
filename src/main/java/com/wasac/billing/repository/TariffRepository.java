@@ -13,7 +13,8 @@ import java.util.Optional;
 public interface TariffRepository extends JpaRepository<Tariff, Long> {
     List<Tariff> findByMeterTypeAndActiveTrue(MeterType meterType);
 
-    @Query("SELECT t FROM Tariff t WHERE t.meterType = :meterType AND t.active = true " +
+    /** Picks the highest version whose effective date range includes the billing date (active flag ignored). */
+    @Query("SELECT t FROM Tariff t WHERE t.meterType = :meterType " +
            "AND t.effectiveFrom <= :date AND (t.effectiveTo IS NULL OR t.effectiveTo >= :date) " +
            "ORDER BY t.version DESC")
     Optional<Tariff> findEffectiveTariff(@Param("meterType") MeterType meterType, @Param("date") LocalDate date);

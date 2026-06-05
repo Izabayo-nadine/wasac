@@ -9,8 +9,8 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 public interface PenaltyConfigRepository extends JpaRepository<PenaltyConfig, Long> {
-    @Query("SELECT p FROM PenaltyConfig p WHERE p.active = true " +
-           "AND p.effectiveFrom <= :date AND (p.effectiveTo IS NULL OR p.effectiveTo >= :date) " +
+    @Query("SELECT p FROM PenaltyConfig p WHERE p.effectiveFrom <= :date " +
+           "AND (p.effectiveTo IS NULL OR p.effectiveTo >= :date) " +
            "ORDER BY p.version DESC")
     Optional<PenaltyConfig> findEffectivePenalty(@Param("date") LocalDate date);
 }
