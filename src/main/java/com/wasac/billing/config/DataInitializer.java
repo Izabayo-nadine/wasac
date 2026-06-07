@@ -35,17 +35,14 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        if (roleRepository.count() > 0) {
-            log.info("Database already seeded, skipping initialization");
+        ensureAllRoles();
+
+        if (userRepository.existsByEmail("customer@example.rw")) {
+            log.info("Demo data already present, skipping sample data seeding");
             return;
         }
 
         log.info("Seeding database with initial data...");
-
-        // Roles
-        for (RoleName roleName : RoleName.values()) {
-            roleRepository.save(Role.builder().name(roleName).build());
-        }
 
         Role adminRole = roleRepository.findByName(RoleName.ROLE_ADMIN).orElseThrow();
         Role operatorRole = roleRepository.findByName(RoleName.ROLE_OPERATOR).orElseThrow();
@@ -55,15 +52,17 @@ public class DataInitializer implements CommandLineRunner {
         String adminPassword = passwordEncoder.encode("admin123");
         String demoPassword = passwordEncoder.encode("Password@123");
 
-        userRepository.save(User.builder()
-                .fullNames("System Administrator")
-                .email("admin@wasac.com")
-                .phoneNumber("0788000001")
-                .password(adminPassword)
-                .status(UserStatus.ACTIVE)
-                .emailVerified(true)
-                .roles(Set.of(adminRole))
-                .build());
+        if (!userRepository.existsByEmail("admin@wasac.com")) {
+            userRepository.save(User.builder()
+                    .fullNames("System Administrator")
+                    .email("admin@wasac.com")
+                    .phoneNumber("0788000001")
+                    .password(adminPassword)
+                    .status(UserStatus.ACTIVE)
+                    .emailVerified(true)
+                    .roles(Set.of(adminRole))
+                    .build());
+        }
 
         userRepository.save(User.builder()
                 .fullNames("Meter Operator")
@@ -174,5 +173,12 @@ public class DataInitializer implements CommandLineRunner {
         log.info("Database seeded successfully!");
         log.info("Default admin credentials - admin@wasac.com / admin123");
         log.info("Swagger UI: http://localhost:8080/swagger-ui.html");
+    }
+
+    private void ensureAllRoles() {
+        for (RoleName roleName : RoleName.values()) {
+            roleRepository.findByName(roleName)
+                    .orElseGet(() -> roleRepository.save(Role.builder().name(roleName).build()));
+        }
     }
 }
